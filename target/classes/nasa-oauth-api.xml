@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:dotnet="http://www.mulesoft.org/schema/mule/dotnet" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:dbserver="http://www.mulesoft.org/schema/mule/dbserver"
+	xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway" xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:oauth="http://www.mulesoft.org/schema/mule/oauth" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/oauth http://www.mulesoft.org/schema/mule/oauth/current/mule-oauth.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd
+http://www.mulesoft.org/schema/mule/dbserver http://www.mulesoft.org/schema/mule/dbserver/current/mule-dbserver.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/dotnet http://www.mulesoft.org/schema/mule/dotnet/current/mule-dotnet.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="684de375-9175-4262-b63f-d3ce85176a5d" >
+		<http:listener-connection host="0.0.0.0" port="${http.port}" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="329380b4-b661-4884-8482-c774b5e8d11f" >
+		<http:request-connection>
+			<http:authentication >
+				<oauth:authorization-code-grant-type localAuthorizationUrl="${local.authorization.url}" authorizationUrl="${authorization.url}" clientId="${client.id}" clientSecret="${client.secret}" tokenUrl="${token.url}" localCallbackConfig="HTTP_Listener_config" localCallbackConfigPath="/callback" localAuthorizationUrlResourceOwnerId="MuleSoft" state="Mule123" resourceOwnerId="MuleSoft" externalCallbackUrl="${external.callback.url}">
+					<oauth:token-manager objectStore="Object_store" />
+				</oauth:authorization-code-grant-type>
+			</http:authentication>
+		</http:request-connection>
+	</http:request-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="fd4fbdfa-6764-4f4b-b28f-c36b173e0f54" file="mule-artifact.properties" />
+	<os:config name="ObjectStore_Config" doc:name="ObjectStore Config" doc:id="070d3ddf-9474-47c3-9d07-ba9ff3e417b9" />
+	<os:object-store name="Object_store" doc:name="Object store" doc:id="2ab72739-6b75-4afc-baec-e696c1b9dcdc" config-ref="ObjectStore_Config" />
+	<api-gateway:autodiscovery apiId="${api.id}" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="1664e49c-8d38-46a5-9b6a-15201b7bbb45" flowRef="nasa-oauth-apiFlow" />
+	<flow name="nasa-oauth-apiFlow" doc:id="cb695a7f-8006-423c-aa59-f8bda80f81e1" >
+		<http:listener doc:name="Listener" doc:id="548ac39c-0393-4634-b096-61e5f7c1381a" config-ref="HTTP_Listener_config" path="/nasaPoD"/>
+		<http:request method="GET" doc:name="Request" doc:id="f4980ec7-40ed-4360-af8c-e581592204a8" config-ref="HTTP_Request_configuration" url="${nasa.api.proxy.url}">
+		</http:request>
+		<logger level="INFO" doc:name="Logger" doc:id="af12c34f-1839-4549-b321-cfc40c3386f6" message="#[output application/json --- payload]"/>
+		<http:request method="GET" doc:name="Request" doc:id="9f5590ef-e5ae-431c-aacd-1fcdf36b7c62" url="#[payload.hdurl]"/>
+	</flow>
+</mule>
